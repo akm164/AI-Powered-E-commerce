@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusShop | AI-Powered E-Commerce</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6d28d9;
+            --primary-light: #8b5cf6;
+            --secondary: #10b981;
+            --dark: #1f2937;
+            --light: #f3f4f6;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .product-card {
+            transition: all 0.3s ease;
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .recommendation-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--secondary);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .cart-item {
+            transition: all 0.2s ease;
+        }
+
+        .cart-item:hover {
+            background-color: rgba(243, 244, 246, 0.5);
+        }
+
+        .stripe-element {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .loader {
+            border-top-color: var(--primary);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header/Navigation -->
+    <header class="bg-white shadow-sm">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/90474256-b3da-4f0f-a517-623c1b293bf5.png" alt="NexusShop logo - purple diamond shape with letter N in white" class="h-10 w-10">
+                <span class="text-xl font-bold text-purple-800">NexusShop</span>
+            </div>
+            
+            <div class="hidden md:flex items-center space-x-6">
+                <a href="#" class="text-gray-600 hover:text-purple-700">Home</a>
+                <a href="#products" class="text-gray-600 hover:text-purple-700">Products</a>
+                <a href="#about" class="text-gray-600 hover:text-purple-700">About</a>
+                <button id="auth-btn" class="px-4 py-2 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition">
+                    Sign In
+                </button>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <button id="cart-btn" class="relative p-2 text-gray-600 hover:text-purple-700">
+                    <i class="fas fa-shopping-cart text-xl"></i>
+                    <span id="cart-count" class="absolute -top-1 -right-1 bg-purple-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">0</span>
+                </button>
+                <button class="md:hidden p-2 text-gray-600 hover:text-purple-700">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-r from-purple-700 to-purple-500 text-white py-16 md:py-24">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4">AI-Powered Shopping Experience</h1>
+            <p class="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">Discover products tailored just for you with our machine learning recommendations.</p>
+            <div class="flex justify-center space-x-4">
+                <a href="#products" class="px-6 py-3 bg-white text-purple-700 rounded-md font-medium hover:bg-gray-100 transition">Shop Now</a>
+                <a href="#about" class="px-6 py-3 border border-white text-white rounded-md font-medium hover:bg-white hover:text-purple-700 transition">Learn More</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI Recommendation Section -->
+    <section id="recommendations" class="py-12 bg-gray-100">
+        <div class="container mx-auto px-4">
+            <h2 class="text-2xl md:text-3xl font-bold mb-8 text-gray-800 text-center">Recommended For You</h2>
+            <div id="recommended-products" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <!-- AI recommendations will be loaded here -->
+                <div class="text-center py-12">
+                    <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mx-auto"></div>
+                    <p class="mt-4 text-gray-600">Loading personalized recommendations...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- All Products Section -->
+    <section id="products" class="py-12">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-800">Our Products</h2>
+                <div class="flex space-x-2">
+                    <select class="px-3 py-2 border rounded-md text-gray-700">
+                        <option>All Categories</option>
+                        <option>Electronics</option>
+                        <option>Clothing</option>
+                        <option>Home & Garden</option>
+                    </select>
+                    <select class="px-3 py-2 border rounded-md text-gray-700">
+                        <option>Sort By</option>
+                        <option>Price: Low to High</option>
+                        <option>Price: High to Low</option>
+                        <option>Popularity</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <!-- Products will be loaded here -->
+                <div class="text-center py-12">
+                    <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mx-auto"></div>
+                    <p class="mt-4 text-gray-600">Loading products...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section id="about" class="py-12 bg-gray-100">
+        <div class="container mx-auto px-4">
+            <h2 class="text-2xl md:text-3xl font-bold mb-12 text-gray-800 text-center">How Our AI Recommendation Works</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="text-center p-6">
+                    <div class="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-chart-line text-purple-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2 text-gray-800">Analyzes Behavior</h3>
+                    <p class="text-gray-600">Our TensorFlow model tracks your browsing patterns and purchase history.</p>
+                </div>
+                <div class="text-center p-6">
+                    <div class="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-brain text-purple-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2 text-gray-800">Generates Insights</h3>
+                    <p class="text-gray-600">ML algorithms identify patterns and predict products you'll love.</p>
+                </div>
+                <div class="text-center p-6">
+                    <div class="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-gift text-purple-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2 text-gray-800">Delivers Results</h3>
+                    <p class="text-gray-600">Personalized recommendations drive a 32% increase in customer satisfaction.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Cart Modal -->
+    <div id="cart-modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                            <h3 class="text-2xl leading-6 font-bold text-gray-900 mb-6">
+                                Your Shopping Cart
+                            </h3>
+                            <div id="cart-items" class="divide-y divide-gray-200 max-h-96 overflow-y-auto">
+                                <!-- Cart items will be loaded here -->
+                                <p class="py-4 text-gray-500">Your cart is empty</p>
+                            </div>
+                            <div class="mt-6 pt-4 border-t border-gray-200">
+                                <div class="flex justify-between mb-2">
+                                    <span class="text-gray-600">Subtotal</span>
+                                    <span id="cart-subtotal" class="font-medium">$0.00</span>
+                                </div>
+                                <div class="flex justify-between mb-4">
+                                    <span class="text-gray-600">Shipping</span>
+                                    <span class="font-medium">Free</span>
+                                </div>
+                                <div class="flex justify-between text-lg font-bold">
+                                    <span>Total</span>
+                                    <span id="cart-total" class="text-purple-700">$0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button id="checkout-btn" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-600 text-base font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        Checkout
+                    </button>
+                    <button id="close-cart-btn" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        Continue Shopping
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div id="payment-modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                            <h3 class="text-2xl leading-6 font-bold text-gray-900 mb-2">
+                                Payment Information
+                            </h3>
+                            <p class="text-gray-500 mb-6">Complete your purchase securely with Stripe</p>
+                            
+                            <div id="payment-form" class="space-y-4">
+                                <div class="stripe-element">
+                                    <div id="card-element">
+                                        <!-- Stripe card element will be inserted here -->
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center">
+                                    <input id="save-payment" type="checkbox" class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                                    <label for="save-payment" class="ml-2 block text-sm text-gray-700">
+                                        Save payment method for future purchases
+                                    </label>
+                                </div>
+                                
+                                <button id="submit-payment" type="button" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                                    <span id="payment-button-text">Pay $<span id="payment-amount">0.00</span></span>
+                                    <span id="payment-spinner" class="hidden ml-2">
+                                        <i class="fas fa-circle-notch fa-spin"></i>
+                                    </span>
+                                </button>
+                                
+                                <div id="payment-errors" class="text-red-500 text-sm mt-2 hidden"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button id="close-payment-btn" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        Back to Cart
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Confirmation Modal -->
+    <div id="confirmation-modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 text-center">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+                        <i class="fas fa-check text-green-600"></i>
+                    </div>
+                    <h3 class="text-2xl leading-6 font-bold text-gray-900 mt-3 mb-2">
+                        Order Confirmed!
+                    </h3>
+                    <div class="mt-2">
+                        <p class="text-gray-600 mb-4">Your order has been placed successfully. A confirmation email has been sent to your registered address.</p>
+                        <p class="font-medium text-gray-700">
+                            Order #<span id="order-number">12345</span>
+                        </p>
+                        <div class="flex justify-between max-w-xs mx-auto mt-4">
+                            <div>
+                                <p class="text-sm text-gray-500">Total</p>
+                                <p class="font-medium">$<span id="order-total">0.00</span></p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Items</p>
+                                <p class="font-medium"><span id="order-items">0</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button id="close-confirmation-btn" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-600 text-base font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        Continue Shopping
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">NexusShop</h3>
+                    <p class="text-gray-400">The future of AI-powered e-commerce experiences.</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white">Home</a></li>
+                        <li><a href="#products" class="text-gray-400 hover:text-white">Products</a></li>
+                        <li><a href="#about" class="text-gray-400 hover:text-white">About</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Account</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white">Sign In</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Register</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Orders</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Wishlist</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Connect</h3>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-gray-400 mb-2">Subscribe to our newsletter</p>
+                        <div class="flex">
+                            <input type="email" placeholder="Your email" class="px-3 py-2 w-full text-gray-800 rounded-l-md">
+                            <button class="bg-purple-600 px-4 py-2 rounded-r-md hover:bg-purple-700">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+                <p>© 2023 NexusShop. All rights reserved. Built with Node.js, Express, TensorFlow, and Stripe.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://js.stripe.com/v3/"></script>
+    <script>
+        // Constants
+        const API_BASE_URL = 'https://api.nexusshop.example/v1';
+        const STRIPE_PUBLIC_KEY = 'pk_test_your_stripe_public_key_here';
+        
+        // State
+        let cart = [];
+        let products = [];
+        let stripe = Stripe(STRIPE_PUBLIC_KEY);
+        let elements;
+        let cardElement;
+
+        // DOM Elements
+        const cartBtn = document.getElementById('cart-btn');
+        const cartModal = document.getElementById('cart-modal');
+        const cartItemsContainer = document.getElementById('cart-items');
+        const cartSubtotal = document.getElementById('cart-subtotal');
+        const cartTotal = document.getElementById('cart-total');
+        const cartCount = document.getElementById('cart-count');
+        const closeCartBtn = document.getElementById('close-cart-btn');
+        const checkoutBtn = document.getElementById('checkout-btn');
+        const paymentModal = document.getElementById('payment-modal');
+        const paymentAmount = document.getElementById('payment-amount');
+        const closePaymentBtn = document.getElementById('close-payment-btn');
+        const submitPaymentBtn = document.getElementById('submit-payment');
+        const paymentErrors = document.getElementById('payment-errors');
+        const confirmationModal = document.getElementById('confirmation-modal');
+        const closeConfirmationBtn = document.getElementById('close-confirmation-btn');
+        const orderTotal = document.getElementById('order-total');
+        const orderItems = document.getElementById('order-items');
+        const recommendedProductsContainer = document.getElementById('recommended-products');
+        const productsGrid = document.getElementById('products-grid');
+
+        // Initialize Stripe Elements
+        function initStripeElements() {
+            elements = stripe.elements();
+            cardElement = elements.create('card', {
+                style: {
+                    base: {
+                        fontSize: '16px',
+                        color: '#32325d',
+                        '::placeholder': {
+                            color: '#aab7c4'
+                        }
+                    },
+                    invalid: {
+                        color: '#fa755a',
+                        iconColor: '#fa755a'
+                    }
+                }
+            });
+            cardElement.mount('#card-element');
+        }
+
+        // Fetch Products
+        async function fetchProducts() {
+            try {
+                // Simulate API call to Node.js/Express backend
+                // In a real app, this would be: const response = await fetch(`${API_BASE_URL}/products`);
+                const mockProducts = [
+                    {
+                        id: 1,
+                        name: 'Wireless Noise-Canceling Headphones',
+                        price: 299.99,
+                        category: 'Electronics',
+                        image: 'https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/b3e7480f-a382-4d39-8610-88e643a00d46.png',
+                        alt: 'Premium wireless headphones with noise cancellation in matte black finish',
+                        description: 'Experience crystal clear sound with our latest wireless headphones featuring active noise cancellation and 30-hour battery life.'
+                    },
+                    {
+                        id: 2,
+                        name: 'Smart Fitness Watch',
+                        price: 199.99,
+                        category: 'Electronics',
+                        image: 'https://placehold.co/600x400',
+                        alt: 'Black smartwatch with fitness tracking features on a wrist',
+                        description: 'Track your workouts, heart rate, and sleep patterns with this sleek smartwatch that keeps you connected.'
+                    },
+                    {
+                        id: 3,
+                        name: 'Organic Cotton T-Shirt',
+                        price: 29.99,
+                        category: 'Clothing',
+                        image: 'https://placehold.co/600x400',
+                        alt: 'White organic cotton t-shirt on a hanger',
+                        description: 'Eco-friendly and comfortable organic cotton t-shirt available in multiple colors and sizes.'
+                    },
+                    {
+                        id: 4,
+                        name: 'Stainless Steel Water Bottle',
+                        price: 24.99,
+                        category: 'Home',
+                        image: 'https://placehold.co/600x400',
+                        alt: 'Silver stainless steel water bottle with black cap',
+                        description: 'Keep your drinks cold for 24 hours or hot for 12 with this durable stainless steel bottle.'
+                    },
+                    {
+                        id: 5,
+                        name: 'Wireless Charging Pad',
+                        price: 39.99,
+                        category: 'Electronics',
+                        image: 'https://placehold.co/600x400',
+                        alt: 'White circular wireless charging pad for smartphones',
+                        description: 'Charge your Qi-enabled devices quickly with this stylish wireless charging pad.'
+                    },
+                    {
+                        id: 6,
+                        name: 'Leather Laptop Bag',
+                        price: 89.99,
+                        category: 'Accessories',
+                        image: 'https://placehold.co/600x400',
+                        alt: 'Black leather laptop bag with multiple compartments',
+                        description: 'Sleek and professional leather bag that fits up to 15-inch laptops with ample storage.'
+                    }
+                ];
+                
+                products = mockProducts;
+                renderProducts(products);
+                
+                // Simulate AI recommendations (in a real app, this would be from TensorFlow microservice)
+                const recommendedProducts = [
+                    mockProducts[0], // Headphones
+                    mockProducts[2], // T-shirt
+                    mockProducts[5], // Laptop bag
+                ];
+                
+                renderRecommendedProducts(recommendedProducts);
+            } catch (error) {
+                console.error('Error fetching products:', error);
+                productsGrid.innerHTML = '<p class="text-red-500">Failed to load products. Please try again later.</p>';
+            }
+        }
+
+        // Render All Products
+        function renderProducts(productsToRender) {
+            productsGrid.innerHTML = '';
+            
+            productsToRender.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.className = 'product-card bg-white rounded-lg overflow-hidden shadow-md relative';
+                
+                productCard.innerHTML = `
+                    <div class="product-image h-48 overflow-hidden">
+                        <img src="${product.image}" alt="${product.alt}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-semibold text-lg mb-1 text-gray-800">${product.name}</h3>
+                        <p class="text-gray-600 text-sm mb-3">${product.category}</p>
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-purple-700">$${product.price.toFixed(2)}</span>
+                            <button onclick="addToCart(${product.id})" class="px-3 py-1 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition">
+                                Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                productsGrid.appendChild(productCard);
+            });
+        }
+
+        // Render Recommended Products
+        function renderRecommendedProducts(recommendedProducts) {
+            recommendedProductsContainer.innerHTML = '';
+            
+            recommendedProducts.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.className = 'product-card bg-white rounded-lg overflow-hidden shadow-md relative';
+                
+                productCard.innerHTML = `
+                    <div class="recommendation-badge">
+                        <i class="fas fa-lightbulb mr-1"></i> AI Pick
+                    </div>
+                    <div class="product-image h-48 overflow-hidden">
+                        <img src="${product.image}" alt="${product.alt}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-semibold text-lg mb-1 text-gray-800">${product.name}</h3>
+                        <p class="text-gray-600 text-sm mb-3">${product.category}</p>
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-purple-700">$${product.price.toFixed(2)}</span>
+                            <button onclick="addToCart(${product.id})" class="px-3 py-1 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition">
+                                Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                recommendedProductsContainer.appendChild(productCard);
+            });
+        }
+
+        // Add to Cart
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+            
+            const existingItem = cart.find(item => item.id === productId);
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({
+                    ...product,
+                    quantity: 1
+                });
+            }
+            
+            updateCart();
+            
+            // Show notification
+            const notification = document.createElement('div');
+            notification.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg animate-fade-in-up';
+            notification.innerHTML = `
+                <span>${product.name} added to cart</span>
+                <button onclick="this.parentElement.remove()" class="ml-2">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Update Cart UI
+        function updateCart() {
+            cartCount.textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
+            
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML = '<p class="py-4 text-gray-500">Your cart is empty</p>';
+                cartSubtotal.textContent = '$0.00';
+                cartTotal.textContent = '$0.00';
+                checkoutBtn.disabled = true;
+            } else {
+                cartItemsContainer.innerHTML = '';
+                
+                cart.forEach(item => {
+                    const cartItem = document.createElement('div');
+                    cartItem.className = 'cart-item p-4 flex';
+                    cartItem.innerHTML = `
+                        <div class="flex-shrink-0">
+                            <img src="${item.image}" alt="${item.alt}" class="w-16 h-16 rounded-md object-cover">
+                        </div>
+                        <div class="ml-4 flex-1">
+                            <div class="flex justify-between text-base font-medium text-gray-900">
+                                <h3>${item.name}</h3>
+                                <p class="ml-4">$${(item.price * item.quantity).toFixed(2)}</p>
+                            </div>
+                            <div class="flex justify-between mt-1 text-sm text-gray-500">
+                                <p>Quantity: ${item.quantity}</p>
+                                <div class="flex space-x-2">
+                                    <button onclick="updateQuantity(${item.id}, -1)" class="px-2 bg-gray-100 rounded">
+                                        <i class="fas fa-minus text-xs"></i>
+                                    </button>
+                                    <button onclick="updateQuantity(${item.id}, 1)" class="px-2 bg-gray-100 rounded">
+                                        <i class="fas fa-plus text-xs"></i>
+                                    </button>
+                                    <button onclick="removeFromCart(${item.id})" class="text-red-500 ml-4">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    cartItemsContainer.appendChild(cartItem);
+                });
+                
+                const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                cartSubtotal.textContent = `$${subtotal.toFixed(2)}`;
+                cartTotal.textContent = `$${subtotal.toFixed(2)}`;
+                checkoutBtn.disabled = false;
+                paymentAmount.textContent = subtotal.toFixed(2);
+            }
+        }
+
+        // Update Item Quantity
+        function updateQuantity(productId, change) {
+            const item = cart.find(i => i.id === productId);
+            if (!item) return;
+            
+            item.quantity += change;
+            
+            if (item.quantity <= 0) {
+                cart = cart.filter(i => i.id !== productId);
+            }
+            
+            updateCart();
+        }
+
+        // Remove From Cart
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            updateCart();
+        }
+
+        // Handle Payment
+        async function handlePayment() {
+            // Show loading state
+            submitPaymentBtn.disabled = true;
+            document.getElementById('payment-spinner').classList.remove('hidden');
+            document.getElementById('payment-button-text').classList.add('hidden');
+            paymentErrors.classList.add('hidden');
+            
+            try {
+                // In a real app, this would call your Node.js/Express backend to create a payment intent
+                // const response = await fetch(`${API_BASE_URL}/create-payment-intent`, {
+                //     method: 'POST',
+                //     headers: {
+                //         'Content-Type': 'application/json',
+                //     },
+                //     body: JSON.stringify({
+                //         amount: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) * 100,
+                //         currency: 'usd',
+                //     }),
+                // });
+                
+                // const { clientSecret } = await response.json();
+                
+                // For demo, we'll simulate success
+                const confirmationResult = {
+                    paymentIntent: {
+                        id: 'pi_' + Math.random().toString(36).substr(2, 10),
+                        amount: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) * 100,
+                        currency: 'usd',
+                        status: 'succeeded'
+                    }
+                };
+                
+                if (confirmationResult.paymentIntent.status === 'succeeded') {
+                    // Simulate sending order to backend
+                    // await fetch(`${API_BASE_URL}/orders`, {
+                    //     method: 'POST',
+                    //     headers: {
+                    //         'Content-Type': 'application/json',
+                    //     },
+                    //     body: JSON.stringify({
+                    //         items: cart,
+                    //         total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+                    //         paymentIntentId: confirmationResult.paymentIntent.id
+                    //     }),
+                    // });
+                    
+                    // Show confirmation
+                    orderTotal.textContent = (confirmationResult.paymentIntent.amount / 100).toFixed(2);
+                    orderItems.textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
+                    document.getElementById('order-number').textContent = 'ORD' + Math.floor(Math.random() * 10000);
+                    
+                    // Clear cart
+                    cart = [];
+                    updateCart();
+                    
+                    // Close modals and show confirmation
+                    paymentModal.classList.add('hidden');
+                    confirmationModal.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Payment error:', error);
+                paymentErrors.textContent = 'Payment failed. Please try again.';
+                paymentErrors.classList.remove('hidden');
+            } finally {
+                submitPaymentBtn.disabled = false;
+                document.getElementById('payment-spinner').classList.add('hidden');
+                document.getElementById('payment-button-text').classList.remove('hidden');
+            }
+        }
+
+        // Event Listeners
+        cartBtn.addEventListener('click', () => {
+            cartModal.classList.remove('hidden');
+        });
+        
+        closeCartBtn.addEventListener('click', () => {
+            cartModal.classList.add('hidden');
+        });
+        
+        checkoutBtn.addEventListener('click', () => {
+            cartModal.classList.add('hidden');
+            paymentModal.classList.remove('hidden');
+        });
+        
+        closePaymentBtn.addEventListener('click', () => {
+            paymentModal.classList.add('hidden');
+            cartModal.classList.remove('hidden');
+        });
+        
+        submitPaymentBtn.addEventListener('click', handlePayment);
+        
+        closeConfirmationBtn.addEventListener('click', () => {
+            confirmationModal.classList.add('hidden');
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initStripeElements();
+            fetchProducts();
+            
+            // Close modals when clicking outside
+            [cartModal, paymentModal, confirmationModal].forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.classList.add('hidden');
+                    }
+                });
+            });
+        });
+
+        // Expose functions to global scope for button onclick handlers
+        window.addToCart = addToCart;
+        window.updateQuantity = updateQuantity;
+        window.removeFromCart = removeFromCart;
+    </script>
+</body>
+</html>
+
